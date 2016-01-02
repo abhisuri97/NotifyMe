@@ -36,6 +36,13 @@ login({email: config.user , password: config.pass}, function callback (err, api)
 			if (participant_names.length > 0) {
 				for (var i = 0; i < participant_names.length; i++) {
 					var name = String(participant_names[i]).toLowerCase();
+                    if (String(message.body).toLowerCase().indexOf("@channel") >= 0) {
+                        api.getUserID(name, function(err, data) {
+                                if(err) return callback(err);
+                                var recipientID = data[0].userID;
+                                api.sendMessage("You have a new message from " + message.threadName + ": \"" + message.body + "\"", recipientID);
+    });
+                    }
 					if (String(message.body).toLowerCase().indexOf("@" + name) >= 0) {
 						console.log("message: " + message.body);
 						var recipient_id = "";
@@ -48,10 +55,11 @@ login({email: config.user , password: config.pass}, function callback (err, api)
                         api.getUserID(name, function(err, data) {
                                 if(err) return callback(err);
                                 var threadID = data[0].userID;
-                            api.sendMessage("You have a new message from " + message.senderName + ": \"" + message.body + "\"", threadID);
+                            api.sendMessage("You have a new message from " + message.senderName + " in " + message.threadName + ": \"" + message.body + "\"", threadID);
     });
 						
 					}
+                    
 				}
 			} else {
 				console.log("received message from: " + message.senderName);
