@@ -1,4 +1,4 @@
-var config = require('config.json')('./config.json');
+var config = require('./config.json');
 var login = require("facebook-chat-api");
 
 var fb_api;
