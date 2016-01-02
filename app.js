@@ -15,7 +15,7 @@ setInterval(function() {
   http.get("http://mysterious-tor-6444.herokuapp.com", function(res) {
     console.log("pong");
   });
-}, 1800000 * Math.random() + 1200000); 
+}, 300000); 
 
 login({email: config.user , password: config.pass}, function callback (err, api) {
 	if(err) return console.error(err);
