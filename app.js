@@ -1,11 +1,11 @@
-var config = require('config.json')('./sample.json');
+var config = require('config.json')('./config.json');
 var login = require("facebook-chat-api");
 
 var fb_api;
 var request = require("request");
 
 
-login({email: "suriabhinav1997@gmail.com" , password: "807Crowd"}, function callback (err, api) {
+login({email: config.user , password: config.pass}, function callback (err, api) {
 	if(err) return console.error(err);
 
 	fb_api = api
