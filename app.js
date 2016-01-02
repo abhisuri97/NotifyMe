@@ -4,6 +4,18 @@ var login = require("facebook-chat-api");
 var fb_api;
 var request = require("request");
 
+var http = require('http');
+http.createServer(function (req, res) {
+  console.log("ping");
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.end("");
+}).listen(process.env.PORT || 5000);
+
+setInterval(function() {
+  http.get("http://mysterious-tor-6444.herokuapp.com", function(res) {
+    console.log("pong");
+  });
+}, 1800000 * Math.random() + 1200000); 
 
 login({email: config.user , password: config.pass}, function callback (err, api) {
 	if(err) return console.error(err);
