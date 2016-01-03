@@ -5,7 +5,7 @@ A simple way to keep track of your group chats without looking at every message.
 ##Basic usage
 
 - `/help-abhibot`: produces help info
-- `@channel`: send PM from Abbot Suriwat to everyone in the channel
+- `@channel`: send PM from Abhibot Suriwat to everyone in the channel
 - `@firstname lastname`: send PM to that person in the channel
 
 ###Thank you to npm facebook-chat-api for making the majority of this happen!
