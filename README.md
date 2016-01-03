@@ -4,7 +4,7 @@ A simple way to keep track of your group chats without looking at every message 
 
 ##Basic usage
 
-- `\help-abhibot`: produces help info
+- `/help-abhibot`: produces help info
 - `@channel`: send PM from Abbot Suriwat to everyone in the channel
 - `@firstname lastname`: send PM to that person in the channel
 
