@@ -34,9 +34,14 @@ login({email: config.user , password: config.pass}, function callback (err, api)
 			var name = participant_names[i].toLowerCase();
 
 			if (participant_names.length > 0) {
+                
+                if (String(message.body).toLowerCase().indexOf("/help-abhibot") >= 0) {
+                        api.sendMessage("Welcome to AbhiBot: an easy way to keep in touch with your group chats without all the unncessary clutter. You can mute a group chat and still get important notifications through @mentions in your chat! Be sure to friend 'Abhibot Suriwat' to get group @mentions straight to your inbox. To start, just do '@firstname lastname' to notify a person or @channel to send a message to the entire channel. Type \\help-abhibot to see this again", message.threadID);
+                    }
 				for (var i = 0; i < participant_names.length; i++) {
 					var name = String(participant_names[i]).toLowerCase();
-                    if (String(message.body).toLowerCase().indexOf("@channel") >= 0) {
+                    
+                    if (String(message.body).toLowerCase().indexOf("@channel ") >= 0) {
                         api.getUserID(name, function(err, data) {
                                 if(err) return callback(err);
                                 var recipientID = data[0].userID;
