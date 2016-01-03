@@ -1,6 +1,6 @@
 #AbhiBot
 
-A simple way to keep track of your group chats without looking at every message thru @mentions. Simply add “Abhibot Suriwat” to your group chat and type 	`/help-abhibot` to get started. 
+A simple way to keep track of your group chats without looking at every message. You can mute busy group chats, but still be notified when you are needed thru @mentions. Simply add “Abhibot Suriwat” to your group chat and type `/help-abhibot` to get started. 
 
 ##Basic usage
 
