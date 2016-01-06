@@ -23,36 +23,36 @@ login({email: config.user , password: config.pass}, function callback (err, api)
 	fb_api = api
 
 	api.listen(function callback(err, message) {
-        
+        if(err) return console.log(err);
         participant_ids = message.participantIDs;   
         
-        var sendMessage = function(finalMessage,recipients) {
-            console.log(recipients);
-            for(var i = 0; i < recipients.length; i++) {
-                recipient = recipients[i];
-                
-                api.getUserID(recipient, function(err, data) {
-                                if(err) {
-                                    finalMessage = "USER_NOT_FOUND: Hi your @mention for \"@" + recipient + "\" resulted in an unknown target for your message (i.e. there are two or more people it can go to). Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
-                                    recipients = [message.senderName];
-                                    sendMessage(finalMessage,recipients);
-                                    return;
-                                };
-                                threadID = data[0].userID;
-                            
-                                console.log("THREADID:" + threadID + " " + participant_ids.indexOf(threadID));
-                                if(participant_ids.indexOf(threadID) != -1) {
-                                    console.log(threadID + " " + finalMessage);
-                                    api.sendMessage(finalMessage,threadID);
-                                }
-                                else {
-                                    finalMessage = "AMBIGUOUS_USER: Hi your @mention for \"@" + recipient + "\" resulted in an ambiguous target for your message (i.e. there are two or more people it can go to). Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
-                                    recipients = [message.senderName];
-                                    sendMessage(finalMessage,recipients);
-                                }
-                });
-            }
-        }
+//        var sendMessage = function(finalMessage,recipients) {
+//            console.log(recipients);
+//            for(var i = 0; i < recipients.length; i++) {
+//                recipient = recipients[i];
+//                
+//                api.getUserID(recipient, function(err, data) {
+//                                if(err) {
+//                                    finalMessage = "USER_NOT_FOUND: Hi your @mention for \"@" + recipient + "\" resulted in an unknown target for your message (i.e. there are two or more people it can go to). Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
+//                                    recipients = [message.senderName];
+//                                    sendMessage(finalMessage,recipients);
+//                                    return;
+//                                };
+//                                threadID = data[0].userID;
+//                            
+//                                console.log("THREADID:" + threadID + " " + participant_ids.indexOf(threadID));
+//                                if(participant_ids.indexOf(threadID) != -1) {
+//                                    console.log(threadID + " " + finalMessage);
+//                                    api.sendMessage(finalMessage,threadID);
+//                                }
+//                                else {
+//                                    finalMessage = "AMBIGUOUS_USER: Hi your @mention for \"@" + recipient + "\" resulted in an ambiguous target for your message (i.e. there are two or more people it can go to). Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
+//                                    recipients = [message.senderName];
+//                                    sendMessage(finalMessage,recipients);
+//                                }
+//                });
+//            }
+//        }
         
         var initUserTrie = function(callback,callback2) {
             var participantNames = new TrieJS();
@@ -156,7 +156,7 @@ login({email: config.user , password: config.pass}, function callback (err, api)
                 }
             }
         }
-        
+//        
         initUserTrie(getUsersForTrie,checkAtMention);   
     }
               
