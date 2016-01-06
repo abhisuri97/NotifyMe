@@ -3,7 +3,7 @@ var login = require("facebook-chat-api");
 
 var fb_api;
 var request = require("request");
-
+var TrieJS = require('triejs');
 var http = require('http');
 http.createServer(function (req, res) {
   console.log("ping");
@@ -22,56 +22,126 @@ login({email: config.user , password: config.pass}, function callback (err, api)
 
 	fb_api = api
 
-	var participant_ids = [];
-	var participant_names = [];
-
 	api.listen(function callback(err, message) {
-		participant_names = message.participantNames;
+        
+        participantNames = new TrieJS();
         participant_ids = message.participantIDs;   
-        if(message.type == "message") {
-				 //if @mention
-		  for (var i = 0; i < participant_names.length; i++) {
-			var name = participant_names[i].toLowerCase();
+        
+        //ADD ALL USERS TO TRIE
+        for(var i = 0; i < message.participantIDs.length; i++) {
+            api.getUserInfo(message.participantIDs[i], function(err, ret) {
+                if(err) return console.error(err);
 
-			if (participant_names.length > 0) {
+                for(var prop in ret) {
+                    if(ret.hasOwnProperty(prop) && ret[prop].name) {
+                        var tempAdd = ret[prop].name;
+                        participantNames.add(tempAdd);
+                    }
+                }
+            });            
+        }
+        
+        function sendMessage(finalMessage,recipients) {
+            console.log(recipients);
+            for(var i = 0; i < recipients.length; i++) {
+                recipient = recipients[i];
+                
+                api.getUserID(recipient, function(err, data) {
+                                if(err) {
+                                    finalMessage = "USER_NOT_FOUND: Hi your @mention for \"@" + recipient + "\" resulted in an unknown target for your message (i.e. there are two or more people it can go to). Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
+                                    recipients = [message.senderName];
+                                    sendMessage(finalMessage,recipients);
+                                    return;
+                                };
+                                threadID = data[0].userID;
+                            
+                                console.log("THREADID:" + threadID + " " + participant_ids.indexOf(threadID));
+                                if(participant_ids.indexOf(threadID) != -1) {
+                                    console.log(threadID + " " + finalMessage);
+                                    api.sendMessage(finalMessage,threadID);
+                                }
+                                else {
+                                    finalMessage = "AMBIGUOUS_USER: Hi your @mention for \"@" + recipient + "\" resulted in an ambiguous target for your message (i.e. there are two or more people it can go to). Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
+                                    recipients = [message.senderName];
+                                    sendMessage(finalMessage,recipients);
+                                }
+                });
+            }
+        }
+        
+        //CHECK IF @ MENTION
+        if(message.type == "message") {
+                
+                finalMessage = "";
+                var recipients = [];
                 
                 if (String(message.body).toLowerCase().indexOf("/help-abhibot") >= 0) {
-                        api.sendMessage("Welcome to AbhiBot: an easy way to keep in touch with your group chats without all the unncessary clutter. You can mute a group chat and still get important notifications through @mentions in your chat! Be sure to friend 'Abhibot Suriwat' to get group @mentions straight to your inbox. To start, just do '@firstname lastname' to notify a person or @channel to send a message to the entire channel. Type \\help-abhibot to see this again", message.threadID);
-                    }
-				for (var i = 0; i < participant_names.length; i++) {
-					var name = String(participant_names[i]).toLowerCase();
+                    finalMessage = "Welcome to AbhiBot: an easy way to keep in touch with your group chats without all the unncessary clutter. You can mute a group chat and still get important notifications through @mentions in your chat! Be sure to friend 'Abhibot Suriwat' to get group @mentions straight to your inbox. To start, just do '@firstname lastname' to notify a person or @channel to send a message to the entire channel. Type /help-abhibot to see this again"
+                    recipients = message.threadID;
+                    api.sendMessage(finalMessage,recipients);
+                    return;
+                }
+                
+                if (String(message.body).toLowerCase().indexOf("@") >= 0) {
                     
-                    if (String(message.body).toLowerCase().indexOf("@channel ") >= 0) {
-                        api.getUserID(name, function(err, data) {
-                                if(err) return callback(err);
-                                var recipientID = data[0].userID;
-                                api.sendMessage("You have a new message from " + message.threadName + ": \"" + message.body + "\"", recipientID);
-    });
-                    }
-					if (String(message.body).toLowerCase().indexOf("@" + name) >= 0) {
-						console.log("message: " + message.body);
-						var recipient_id = "";
-						for (var i = 0; i < participant_names.length; i++) {
-							if (String(participant_names[i]).toLowerCase() == name) {
-								recipient_id = participant_ids[i];
-							}
-						}
-						console.log("recipient_id: " + recipient_id);
-                        api.getUserID(name, function(err, data) {
-                                if(err) return callback(err);
-                                var threadID = data[0].userID;
-                            api.sendMessage("You have a new message from " + message.senderName + " in " + message.threadName + ": \"" + message.body + "\"", threadID);
-    });
-						
-					}
+                    var names = [];
                     
-				}
-			} else {
-				console.log("received message from: " + message.senderName);
-			}
-          }
-        
-		};
-	});
-});
+                    //find @ symbols and following letters coming after @ symbol
+                    
+                    for(var j=0; j<String(message.body).length; j++) {
+                        
+                        str = String(message.body);
+                        if(str[j]==="@") {
+                            var startIndex = (j+1);
+                            var endIndex = str.indexOf(" ",j);
+                            if (endIndex == -1) {
+                                endIndex = str.length;
+                            }
+                            //push to names array
+                            names.push(str.substring(startIndex,endIndex));
+                        }
+                    }
+
+                    
+                    if(names.length > 0) {
+                        for(var k = 0; k < names.length; k++) {
+                            if(names[k] === "channel") {
+                                finalMessage = "You have a new message from " + message.threadName + ": \"" + message.body + "\""
+                                for(var l = 0; l < message.participantNames.length; l++) {
+                                    recipients.push(message.participantNames[l]);
+                                }
+                                break;
+                            }
+                            else {
+                                finalMessage = "You have a new message from " + message.senderName + " in " + message.threadName + ": \"" + message.body + "\"";
+                                console.log(names[k]);
+                                result = participantNames.find(names[k]);
+                                console.log("RESULT:" + result + " from " + String(names[k]));
+
+                                if((typeof result !== 'undefined')) {
+                                    
+                                        
+                                        if(result.length > 1) {
+                                            console.log("YES");
+
+                                            finalMessage = "AMBIGUOUS_TARGET: Hi your @mention for \"@" + names[k] + "\" resulted in an ambiguous target for your message (i.e. there are two or more people it can go to). Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
+                                            recipients = [message.senderName];
+                                            sendMessage(finalMessage,recipients);
+                                            continue;
+                                        }
+                                    
+                                }
+                                recipients.push(String(result));
+                            }
+                        }
+                        if(typeof recipients !== 'undefined') { 
+                            
+                            sendMessage(finalMessage,recipients);
+                        }
+
+                    }
+                }
+        }		
+    })});
+               
 
