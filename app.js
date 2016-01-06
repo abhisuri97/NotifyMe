@@ -24,24 +24,9 @@ login({email: config.user , password: config.pass}, function callback (err, api)
 
 	api.listen(function callback(err, message) {
         
-        participantNames = new TrieJS();
         participant_ids = message.participantIDs;   
         
-        //ADD ALL USERS TO TRIE
-        for(var i = 0; i < message.participantIDs.length; i++) {
-            api.getUserInfo(message.participantIDs[i], function(err, ret) {
-                if(err) return console.error(err);
-
-                for(var prop in ret) {
-                    if(ret.hasOwnProperty(prop) && ret[prop].name) {
-                        var tempAdd = ret[prop].name;
-                        participantNames.add(tempAdd);
-                    }
-                }
-            });            
-        }
-        
-        function sendMessage(finalMessage,recipients) {
+        var sendMessage = function(finalMessage,recipients) {
             console.log(recipients);
             for(var i = 0; i < recipients.length; i++) {
                 recipient = recipients[i];
@@ -69,8 +54,36 @@ login({email: config.user , password: config.pass}, function callback (err, api)
             }
         }
         
-        //CHECK IF @ MENTION
-        if(message.type == "message") {
+        var initUserTrie = function(callback,callback2) {
+            var participantNames = new TrieJS();
+            var participantNamesbkUp = [];
+            
+            callback(null,participantNames,callback2);
+        }
+        
+        var getUsersForTrie = function(err,data,callback2) {
+            for(var i = 0; i < participant_ids.length; i++) {
+                
+                api.getUserInfo(participant_ids[i], function(err, ret) {
+                    if(err) return console.error(err);
+                    for(var prop in ret) {
+                        if(ret.hasOwnProperty(prop) && ret[prop].name) {
+                            var tempAdd = ret[prop].name;
+                            data.add(tempAdd);
+                            console.log(tempAdd);
+                        }
+                    }
+
+                });            
+            }
+            callback2(data);
+        }
+        
+        
+        var checkAtMention = function(err,data) {
+            
+            if(err) throw err;
+            if(message.type == "message") {
                 
                 finalMessage = "";
                 var recipients = [];
@@ -107,15 +120,15 @@ login({email: config.user , password: config.pass}, function callback (err, api)
                         for(var k = 0; k < names.length; k++) {
                             if(names[k] === "channel") {
                                 finalMessage = "You have a new message from " + message.threadName + ": \"" + message.body + "\""
-                                for(var l = 0; l < message.participantNames.length; l++) {
-                                    recipients.push(message.participantNames[l]);
+                                for(var l = 0; l < message.data.length; l++) {
+                                    recipients.push("ALL");
                                 }
                                 break;
                             }
                             else {
                                 finalMessage = "You have a new message from " + message.senderName + " in " + message.threadName + ": \"" + message.body + "\"";
                                 console.log(names[k]);
-                                result = participantNames.find(names[k]);
+                                result = data.find(names[k]);
                                 console.log("RESULT:" + result + " from " + String(names[k]));
 
                                 if((typeof result !== 'undefined')) {
@@ -141,7 +154,12 @@ login({email: config.user , password: config.pass}, function callback (err, api)
 
                     }
                 }
-        }		
-    })});
+            }
+        }
+        
+        initUserTrie(getUsersForTrie,checkAtMention);   
+    }
+              
+)});
                
 
