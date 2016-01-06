@@ -1,6 +1,9 @@
 {
   "name": "abhi-bot",
   "version": "2.0.0",
+  "engines": {
+    "node": "4.2.1"
+  },
   "description": "Way to notify yourself in group chats",
   "main": "app.js",
   "dependencies": {
@@ -8,7 +11,7 @@
     "facebook-chat-api": "^1.0.4",
     "request": "^2.67.0",
     "triejs": "^0.1.5",
-    "async": "^0.7.7"
+    "async": "^1.5.1"
   },
   "devDependencies": {},
   "scripts": {
@@ -22,7 +25,7 @@
     "notifications",
     "messenger"
   ],
-  "author": "Abhinav SUri",
+  "author": "Abhinav Suri",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/webfreak7/AbhiNotif/issues"
