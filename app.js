@@ -6,6 +6,7 @@ var request = require("request");
 var TrieJS = require('triejs');
 var http = require('http');
 var async = require('async');
+
 http.createServer(function (req, res) {
   console.log("ping");
   res.writeHead(200, {'Content-Type': 'text/plain'});
@@ -29,43 +30,49 @@ login({email: config.user , password: config.pass}, function callback (err, api)
         participantIDs = message.participantIDs;   
         
         var sendMessage = function(finalMessage,recipients) {
-            
+            console.log(recipients);
             for(var i = 0; i < recipients.length; i++) {
                 recipient = String(recipients[i]);
-                api.getUserID(recipient, function(err, data) {
-                    if(err) {
-                        finalMessage = "USER_NOT_FOUND: Hi your @mention for \"@" + recipient + 
-                                       "\" resulted in an unknown target for your message (i.e. there are two or more people it can go to)." +
-                                       " Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
-                        recipients = [message.senderName];
-                        sendMessage(finalMessage,recipients);
-                        return;
-                    };
-                    threadID = data[0].userID;
-                            
-                    if((participantIDs.indexOf(threadID)) != -1) {
-                        console.log(threadID + " " + finalMessage);
-                        api.sendMessage(finalMessage,threadID);
+                console.log("recip:"+recipient);
+                for(var j = 0; j < participantNames.length; j++) {
+                    if(recipient == String(participantNames[j].name).toLowerCase()) {
+                        api.sendMessage(finalMessage,participantNames[j].id);
+                        console.log(finalMessage + " " + participantNames[j].id);
                     }
-                    else {
-                        finalMessage = "AMBIGUOUS_USER: Hi your @mention for \"@" + recipient + 
-                                       "\" resulted in an ambiguous target for your message (i.e. there are two or more people it can go to)." +
-                                       "Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
-                        recipients = [message.senderName];
-                        sendMessage(finalMessage,recipients);
-                    }
-                });
+                }
+//                api.getUserID(recipient, function(err, data) {
+//                    if(err) {
+//                        finalMessage = "USER_NOT_FOUND: Hi your @mention for \"@" + recipient + 
+//                                       "\" resulted in an unknown target for your message (i.e. there are two or more people it can go to)." +
+//                                       " Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
+//                        recipients = [message.senderName];
+//                        sendMessage(finalMessage,recipients);
+//                        return;
+//                    };
+//                    threadID = data[0].userID;
+//                            
+//                    if((participantIDs.indexOf(threadID)) != -1) {
+//                        console.log(threadID + " " + finalMessage);
+//                        api.sendMessage(finalMessage,threadID);
+//                    }
+//                    else {
+//                        finalMessage = "AMBIGUOUS_USER: Hi your @mention for \"@" + recipient + 
+//                                       "\" resulted in an ambiguous target for your message (i.e. there are two or more people it can go to)." +
+//                                       "Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
+//                        recipients = [message.senderName];
+//                        sendMessage(finalMessage,recipients);
+//                    }
+//                });
             }
         }
 
-        participantNames = new TrieJS();
+        participantNames = []
         allNames = [];
         
         var checkAtMention = function() {
             if (err) {
                 throw err;
             }
-            participantNames.remove(config.name);
             if(message.type == "message") {
                 finalMessage = "";
                 var recipients = [];
@@ -94,21 +101,35 @@ login({email: config.user , password: config.pass}, function callback (err, api)
                         var channelMention = false;
                         for(var l = 0; l < names.length; l++) {
                             if(names[l] == "channel") {
+                                
+                                console.log("YES");
                                 finalMessage = "You have a new message from " + message.threadName + ": \"" + message.body + "\"";
-                                recipients = allNames;
+                                for(var i = 0; i < participantNames.length; i++) {
+                                    recipients.push(String(participantNames[i].name).toLowerCase());
+                                }
                                 channelMention = true;
                             }
                         }
                         for(var k = 0; (k < names.length) && (channelMention == false); k++) {
                             finalMessage = "You have a new message from " + message.senderName + " in " + message.threadName + ": \"" + message.body + "\"";
                             var namesNew = names[k].replace(/_/g, " ").toLowerCase();
-                            result = participantNames.find(namesNew);
+                            result = [];
+                            for(var i = 0; i < participantNames.length; i++) {
+                                
+                                console.log(participantNames[i].name);
+                                if(String(participantNames[i].name).toLowerCase().indexOf(namesNew) >= 0) {
+                                    result.push(String(participantNames[i].name).toLowerCase());
+                                    console.log(String(participantNames[i].name).toLowerCase());
+                                }
+                            }
                             if((typeof result !== 'undefined')) {
                                 if(result.length > 1) {
+                                    
+                                    console.log("YESa");
                                     finalMessage = "AMBIGUOUS_TARGET: Hi your @mention for \"@" + namesNew + 
                                             "\" resulted in an ambiguous target for your message (i.e. there are two or more people it can go to)." +
                                             "Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
-                                    recipients = [message.senderName];
+                                    recipients = [String(message.senderName).toLowerCase()];
                                     sendMessage(finalMessage,recipients);
                                     continue;
                                 }
@@ -132,8 +153,8 @@ login({email: config.user , password: config.pass}, function callback (err, api)
                     for(var prop in ret) {
                         if(ret.hasOwnProperty(prop) && ret[prop].name && ret[prop].name !== config.name) {
                             var tempAdd = ret[prop].name;
-                            participantNames.add(tempAdd);
-                            allNames.push(tempAdd);
+                            console.log(ret[prop].name + " " + item);
+                            participantNames.push({name:ret[prop].name, id:item});
                         }
                     }
                     callback();
