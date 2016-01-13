@@ -8,6 +8,16 @@ A simple way to keep track of your group chats without looking at every message.
 - `@channel`: send PM from Abhibot Suriwat to everyone in the group chat
 - `@name`: send PM to the person whose name contains at least the characters in `@name`
 - `@firstname_lastname`: send PM to the person whose name contains the Firstname and LastName
+- `\poll *option 1, *blah, *blah also, *etc`: create a poll with options `option 1`,`blah`,`blah also`,`etc`. Max 1 poll at a time per thread (no simultaneous polls in the same thread). Produces a message with the following syntax: 
+```
+Poll Initialized:
+0: option 1
+1: blah
+2: blah also
+3: etc
+```
+Users can vote by typing any of the indexes 0,1,2,3...
+- `\closepoll`: close active polls. Only the poll creator can do this!
 
 ##Configuration
 
