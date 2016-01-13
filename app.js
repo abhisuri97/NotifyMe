@@ -14,7 +14,7 @@ http.createServer(function (req, res) {
 }).listen(process.env.PORT || 5000);
 
 setInterval(function() {
-  http.get("http://mysterious-tor-6444.herokuapp.com", function(res) {
+  http.get(config.heroku_url, function(res) {
     console.log("pong");
   });
 }, 300000); 

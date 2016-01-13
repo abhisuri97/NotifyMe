@@ -1,0 +1,6 @@
+{
+  "user": "example@test.com",
+  "pass": "password",
+  "name": "Firstname Lastname",
+  "heroku_url": "http://example.heroku.com"
+}

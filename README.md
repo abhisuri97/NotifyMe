@@ -1,7 +1,8 @@
 #AbhiBot
 
-A simple way to keep track of your group chats without looking at every message. You can mute busy group chats, but still be notified when you are needed thru @mentions. Simply add “Smh Munone” to your group chat and type `/help-abhibot` to get started. 
-
+A simple way to keep track of your group chats without looking at every message. You can mute busy group chats, but still be notified when you are needed thru @mentions. Simply add your bot to your group chat and type `/help-abhibot` to get started. 
+##Initialization
+Replace the dummy config file with the appropriate data.
 ##Basic usage
 
 - `/help-abhibot`: produces help info
