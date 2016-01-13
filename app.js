@@ -21,9 +21,15 @@ setInterval(function() {
 
 login({email: config.user , password: config.pass}, function callback (err, api) {
 	if(err) return console.error(err);
-
+    open_polls = new Object();
+    function get(k) {
+        return open_polls[k];
+    }
 	fb_api = api
-
+    function createPoll(options, threadID, person, votes) {
+                    var poll = {options: this.options, threadID: this.threadID, person: this.person, votes: this.votes};
+                    return poll;
+                }
 	api.listen(function callback(err, message) {
         if(err) return console.log(err);
         
@@ -82,6 +88,81 @@ login({email: config.user , password: config.pass}, function callback (err, api)
                     api.sendMessage(finalMessage,recipients);
                     return;
                 }
+                
+
+                if ((String(message.body).toLowerCase().indexOf("/poll")) == 0) {
+                    if(get(message.threadID) != null) {
+                        finalMessage = "ERROR: There is already a poll in the chat"
+                        recipients = message.threadID;
+                        api.sendMessage(finalMessage,recipients);
+                    } else {
+                    var options = []
+                    var person = message.senderName;
+                    for(var j=0; j<String(message.body).length; j++) {
+                        str = String(message.body);
+                        if(str[j]==="*") {
+                            var startIndex = (j+1);
+                            var endIndex = str.indexOf(",",j);
+                            if (endIndex == -1) {
+                                endIndex = str.length;
+                            }
+                            console.log(startIndex + " " + endIndex)
+                            options.push(str.substring(startIndex,endIndex));
+                        }
+                    }
+                    var votes = new Array(options.length);
+                    for (var i = votes.length-1; i >= 0; -- i) votes[i] = 0;
+
+                    var poll = {options: options, message: message.threadID, person: person, votes: votes}
+                    open_polls[message.threadID] = poll;
+                    finalMessage = "Poll Initialized:\n";
+                    for(var a = 0; a < options.length; a++) {
+                        finalMessage += (a) + ":" + options[a] + "\n";
+                    }
+                    recipients = message.threadID;
+                    api.sendMessage(finalMessage,recipients);
+                    return;
+                }
+                }
+                if((get(message.threadID) != null) && (String(message.body).match(/^[0-9]+$/)!=null)) {
+                    var poll = get(message.threadID);
+                    console.log(open_polls);
+                    if(parseInt(String(message.body)) < poll.options.length) {
+                        poll.votes[parseInt(String(message.body))] += 1;
+                    } else {
+                        finalMessage = "ERROR ON "+ parseInt(String(message.body)) +": No such option. Choose between 0 and " + (poll.options.length-1) 
+                        recipients = message.threadID;
+                        api.sendMessage(finalMessage,recipients);
+                    }
+                }
+                if((String(message.body).toLowerCase().indexOf("/closepoll")) == 0) {
+
+                 if((get(message.threadID) != null)) {
+                    var poll = get(message.threadID);
+                    var finalMessage = "";
+                    if(message.senderName == poll.person) {
+                        finalMessage = "Poll Ended. Results:\n";
+                        for(var a = 0; a < poll.options.length; a++) {
+                            finalMessage += poll.options[a] + ":" + poll.votes[a] + "\n";
+                        }
+                        open_polls[message.threadID] = null;
+                    } else {
+                        finalMessage = "ERROR: Only the poll creator " + poll.person + " can close this poll."
+                    }
+                    recipients = message.threadID;
+                    console.log(finalMessage);
+                    if(finalMessage != "") {
+                        api.sendMessage(finalMessage,recipients);
+                    }
+                    
+                } else {
+                    finalMessage = "ERROR: No Active polls in this chat";
+                    recipients = message.threadID;
+                    if(finalMessage != "") {
+                        api.sendMessage(finalMessage,recipients);
+                    }
+                    }                    
+                }
                 if ((String(message.body).toLowerCase().indexOf("@")) >= 0) {
                     var names = [];
                     //find @ symbols and following letters coming after @ symbol
@@ -127,7 +208,7 @@ login({email: config.user , password: config.pass}, function callback (err, api)
                                     
                                     console.log("YESa");
                                     finalMessage = "AMBIGUOUS_TARGET: Hi your @mention for \"@" + namesNew + 
-                                            "\" resulted in an ambiguous target for your message (i.e. there are two or more people it can go to)." +
+                                            "\" resulted in an ambiguous target for your message ("+str(result)+")." +
                                             "Please be more specific :) But we have sent the message to anyone else who we could pinpoint.";
                                     recipients = [String(message.senderName).toLowerCase()];
                                     sendMessage(finalMessage,recipients);
